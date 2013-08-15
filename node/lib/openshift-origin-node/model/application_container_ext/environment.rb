@@ -318,9 +318,9 @@ module OpenShift
               logger.debug("Updating #{gear} from #{source}")
               threads[gear] = Thread.new(gear) do |fqdn|
                 gear_dns = fqdn
-                retries  = 2
+                retries  = 5
                 begin
-                  command = "/usr/bin/rsync -arvO --delete -e ssh #{source}/ #{fqdn}:#{target}"
+                  command = "/usr/bin/rsync -rp0 --delete -e 'ssh -o StrictHostKeyChecking=no' #{source}/ #{fqdn}:#{target}"
                   env = OpenShift::Runtime::Utils::Environ.for_gear(Etc.getpwnam(@uuid).dir)
                   ::OpenShift::Runtime::Utils::oo_spawn(command, expected_exitstatus: 0, uid: @uid, env: env)
                 rescue Exception => e
