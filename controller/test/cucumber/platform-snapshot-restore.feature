@@ -13,4 +13,3 @@ Feature: Snapshot and restore
 
     When I restore the application
     And the mock control_post_restore marker will exist in the gear
-    And the new file will not be present in the gear app-root repo
