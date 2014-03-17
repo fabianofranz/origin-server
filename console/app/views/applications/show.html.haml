@@ -1,5 +1,11 @@
 - content_for :page_style, 'highlight'
 - content_for :page_title, @application.name
+- content_for :javascripts do
+  :javascript
+    $("a.custom-cartridge-toggle-details").live('click', function(e) {
+      e.preventDefault();
+      $($(this).attr('href')).toggle();
+    });
 
 - max_gears = @capabilities.max_gears
 
@@ -115,20 +121,98 @@
                           %div.data
                             = link_to cartridge_storage(cartridge), application_storage_path(@application, :anchor => cartridge.name), :title => "Each gear is allocated disk space.  Click to change."
 
+                  - if cartridge.custom?
+                    .flow
+                      .flow-block.right{:style => 'padding-top:10px'}
+                        %span
+                          = "custom cartridge (#{link_to 'details', '#' + cartridge.name.parameterize, {:class => 'custom-cartridge-toggle-details'}})".html_safe
+
                 - else
                   .flow
                     %h3.flow-block.cartridge-name{title: 'This cartridge is a plugin, and shares resources with the web framework'}
                       = logo_for cartridge.cartridge_type
                       = cartridge.display_name
-                    - if info = cartridge_info(cartridge, @application)
-                      .flow-block.right= info
+                    - info = cartridge_info(cartridge, @application)
+                    - if info || cartridge.custom?
+                      .flow-block.right
+                        = info
+                        - if cartridge.custom?
+                          %span
+                            = "custom cartridge (#{link_to 'details', '#' + cartridge.name.parameterize, {:class => 'custom-cartridge-toggle-details'}})".html_safe
+
 
                 - if cartridge.custom?
-                  %p.created.truncate Created from #{link_to cartridge.url, cartridge.url}
+                  - cartridge_type = cartridge.cartridge_type
+                  .custom-cartridge-details.hide{:id => cartridge.name.parameterize}
+                    - if cartridge_type.description.present?
+                      %p.description= cartridge_type.description
+
+                    - if cartridge_type.version.present?
+                      .row-fluid
+                        %span.span2 Version
+                        %span.span10= cartridge_type.version
+
+                    - if cartridge_type.license.present?
+                      .row-fluid
+                        %span.span2 License
+                        %span.span10
+                          - if cartridge_type.license_url.present?
+                            =link_to cartridge_type.license, cartridge.cartridge_type.license_url
+                          - else
+                            = cartridge_type.license
+
+                    - if cartridge_type.website.present?
+                      .row-fluid
+                        %span.span2 Website
+                        %span.span10=link_to cartridge_type.website, cartridge.cartridge_type.website
+
+                    - if cartridge_type.help_topics.present?
+                      - cartridge_type.help_topics.each do |k, v|
+                        .row-fluid
+                          %span.span2= k
+                          %span.span10=link_to v, v
+                          
+                    .row-fluid
+                      %span.span2 Created from
+                      %span.span10.truncate= link_to 'cartridge manifest', cartridge.url, {:target => 'blank'}
 
                 - if primary && (info = cartridge_info(cartridge, @application))
                   %p= info
 
+    %h2 Deployment Settings
+    .gear-group
+      .cartridge-block
+        .cartridge-border
+          .cartridge-inset
+            .custom-cartridge-details
+              .row-fluid
+                %span.span3 
+                  %strong Mode
+                %span.span9= @application.auto_deploy ? 'auto (on git push)' : 'manual (use rhc deploy)'
+              .row-fluid
+                %span.span3 
+                  %strong History to keep
+                %span.span9= pluralize(@application.keep_deployments, 'deployment', 'deployments')
+              - if @application.deployment_type == 'git'
+                .row-fluid
+                  %span.span3 
+                    %strong Based on
+                  %span.span9= "'#{@application.deployment_branch}' branch"
+              - if !@application.auto_deploy
+                .row-fluid
+                  %span.span3 
+                    %strong Deployment type
+                  %span.span9= @application.deployment_type
+
+    - if @environment_variables.present?
+      %h2 Environment Variables
+      .gear-group
+        - @environment_variables.each_with_index do |environment_variable, i|
+          - primary = i == 0
+          .cartridge-block{:class => ('cartridge-embedded' if !primary)}
+            .cartridge-border
+              .cartridge-inset.truncate{:style => 'font-size:12px'}
+                = "<strong>#{environment_variable.name}</strong>=#{environment_variable.value}".html_safe
 
     %section
       - carts = CartridgeType.cached.embedded.select{ |c| !@application.cartridges.include?(c) }.sort

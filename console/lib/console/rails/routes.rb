@@ -28,6 +28,7 @@ module ActionDispatch::Routing
         end
         resources :applications, :except => :edit, :id => id_regex, :singular_resource => true do
           resources :cartridges, :only => [:show, :create, :index], :id => id_regex, :singular_resource => true
+          resources :environment_variables, :only => [:show, :create, :index], :id => id_regex, :singular_resource => true
           resources :aliases, :only => [:index, :edit, :create, :new, :destroy, :update], :id => id_regex, :singular_resource => true do
             get :delete, on: :member
           end
