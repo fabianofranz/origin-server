@@ -94,12 +94,8 @@ class CartridgeType < RestApi::Base
 
   def automatic_updates?
     v = @attributes[:automatic_updates]
-    Rails.logger.debug "************* URL #{url.inspect}"
-    Rails.logger.debug "************* UPDATES #{v.inspect}"
     if v.nil?
       v = !(tags.include?('no_updates') || custom?)
-      Rails.logger.debug "*************tags.include?('no_updates') #{tags.include?('no_updates').inspect}"
-      Rails.logger.debug "************* custom? #{custom?.inspect}"
     end
     v
   end
