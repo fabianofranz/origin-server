@@ -159,7 +159,7 @@ class Cartridge < RestApi::Base
   end
 
   def cartridge_type
-    @cartridge_type ||= (CartridgeType.cached.find(name) rescue CartridgeType.new(@attributes.slice('name', 'display_name', 'website', 'version', 'type', 'tags', 'license', 'license_url')))
+    @cartridge_type ||= (CartridgeType.cached.find(name) rescue CartridgeType.new(@attributes.slice('name', 'url', 'display_name', 'website', 'version', 'type', 'tags', 'license', 'license_url')))
   end
 end
 
