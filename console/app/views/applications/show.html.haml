@@ -4,7 +4,8 @@
   :javascript
     $("a.custom-cartridge-toggle-details").live('click', function(e) {
       e.preventDefault();
-      $($(this).attr('href')).toggle();
+      $($(this).toggleClass('collapsed').attr('href')).toggle();
+      $(this).find('span').toggle();
     });
 
 - max_gears = @capabilities.max_gears
@@ -17,6 +18,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  a.custom-cartridge-toggle-details span {}
 
 
 - content_for :top do
@@ -79,10 +81,11 @@
       .gear-group
         - group.cartridges.each_with_index do |cartridge, i|
           - primary = i == 0
+          - external = cartridge.cartridge_type.external?
           .cartridge-block{:class => ('cartridge-embedded' if !primary)}
             .cartridge-border
               .cartridge-inset
-                - if primary
+                - if primary && !external
                   %h3.flow
                     .flow-block{:title => cartridge.name}
                       = logo_for cartridge.cartridge_type
@@ -125,7 +128,10 @@
                     .flow
                       .flow-block.right{:style => 'padding-top:10px'}
                         %span
-                          = "custom cartridge (#{link_to 'details', '#' + cartridge.name.parameterize, {:class => 'custom-cartridge-toggle-details'}})".html_safe
+                          %a{:href => "##{cartridge.name.parameterize}", :class => 'custom-cartridge-toggle-details collapsed'}
+                            details   
+                            %span{:'data-icon' => "\uee14"}
+                            %span.hide{:'data-icon' => "\uee12"}
 
                 - else
                   .flow
@@ -136,25 +142,30 @@
                     - if info || cartridge.custom?
                       .flow-block.right
                         = info
-                        - if cartridge.custom?
+                        - if cartridge.custom? || external
                           %span
-                            = "custom cartridge (#{link_to 'details', '#' + cartridge.name.parameterize, {:class => 'custom-cartridge-toggle-details'}})".html_safe
-
+                            %a{:href => "##{cartridge.name.parameterize}", :class => 'custom-cartridge-toggle-details collapsed'}
+                              details   
+                              %span{:'data-icon' => "\uee14"}
+                              %span.hide{:'data-icon' => "\uee12"}
 
                 - if cartridge.custom?
                   - cartridge_type = cartridge.cartridge_type
                   .custom-cartridge-details.hide{:id => cartridge.name.parameterize}
-                    - if cartridge_type.description.present?
-                      %p.description= cartridge_type.description
+                    - if cartridge.description.present?
+                      .row-fluid{:style => 'margin-bottom:5px;'}
+                        %span.span12= cartridge.description
 
                     - if cartridge_type.version.present?
                       .row-fluid
-                        %span.span2 Version
+                        %span.span2 
+                          %strong Version
                         %span.span10= cartridge_type.version
 
                     - if cartridge_type.license.present?
                       .row-fluid
-                        %span.span2 License
+                        %span.span2 
+                          %strong License
                         %span.span10
                           - if cartridge_type.license_url.present?
                             =link_to cartridge_type.license, cartridge.cartridge_type.license_url
@@ -163,46 +174,58 @@
 
                     - if cartridge_type.website.present?
                       .row-fluid
-                        %span.span2 Website
+                        %span.span2 
+                          %strong Website
                         %span.span10=link_to cartridge_type.website, cartridge.cartridge_type.website
 
                     - if cartridge_type.help_topics.present?
                       - cartridge_type.help_topics.each do |k, v|
                         .row-fluid
-                          %span.span2= k
-                          %span.span10=link_to v, v
+                          %span.span2
+                            %strong= k
+                          %span.span10= link_to v, v
                           
                     .row-fluid
-                      %span.span2 Created from
-                      %span.span10.truncate= link_to 'cartridge manifest', cartridge.url, {:target => 'blank'}
+                      %span.span2 
+                        %strong Origin
+                      - if external
+                        %span.span10.truncate external service
+                      - else
+                        %span.span10.truncate= link_to 'custom cartridge', cartridge.url, {:target => 'blank'}
+
+                    .row-fluid
+                      %span.span2 
+                        %strong Security
+                      %span.span10.truncate= cartridge_type.automatic_updates? ? 'receives automatic updates' : 'does not receive automatic updates'
 
                 - if primary && (info = cartridge_info(cartridge, @application))
                   %p= info
 
-    %h2 Deployment Settings
-    .gear-group
-      .cartridge-block
-        .cartridge-border
-          .cartridge-inset
-            .custom-cartridge-details
-              .row-fluid
-                %span.span3 
-                  %strong Mode
-                %span.span9= @application.auto_deploy ? 'auto (on git push)' : 'manual (use rhc deploy)'
-              .row-fluid
-                %span.span3 
-                  %strong History to keep
-                %span.span9= pluralize(@application.keep_deployments, 'deployment', 'deployments')
-              - if @application.deployment_type == 'git'
+    -#
+      %h2 Deployment Settings
+      .gear-group
+        .cartridge-block
+          .cartridge-border
+            .cartridge-inset
+              .custom-cartridge-details
                 .row-fluid
                   %span.span3 
-                    %strong Based on
-                  %span.span9= "'#{@application.deployment_branch}' branch"
-              - if !@application.auto_deploy
+                    %strong Mode
+                  %span.span9= @application.auto_deploy ? 'auto (on git push)' : 'manual (use rhc deploy)'
                 .row-fluid
                   %span.span3 
-                    %strong Deployment type
-                  %span.span9= @application.deployment_type
+                    %strong History to keep
+                  %span.span9= pluralize(@application.keep_deployments, 'deployment', 'deployments')
+                - if @application.deployment_type == 'git'
+                  .row-fluid
+                    %span.span3 
+                      %strong Based on
+                    %span.span9= "'#{@application.deployment_branch}' branch"
+                - if !@application.auto_deploy
+                  .row-fluid
+                    %span.span3 
+                      %strong Deployment type
+                    %span.span9= @application.deployment_type
 
     - if @environment_variables.present?
       %h2 Environment Variables

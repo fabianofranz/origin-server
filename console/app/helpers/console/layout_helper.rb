@@ -332,7 +332,7 @@ module Console::LayoutHelper
     {
       :class => "font-icon",
       :title => item.cartridge?  || item.class.name == "CartridgeType" ? "Cartridge" : "Quickstart",
-      :data_icon => item.cartridge? || item.class.name == "CartridgeType" ? (item.custom? ? "\uee53" : "\uee51") : "\ue029"
+      :data_icon => item.cartridge? || item.class.name == "CartridgeType" ? ((item.external? rescue false) ? "\uee53" : "\uee51") : "\ue029"
     }
   end
 

@@ -137,6 +137,9 @@ class CartridgeType < RestApi::Base
   def haproxy_balancer?
     tags.include?(:web_proxy) && name_prefix == 'haproxy'
   end
+  def external?
+    tags.include?(:external)
+  end
 
   def conflicts
     @conflicts || []
